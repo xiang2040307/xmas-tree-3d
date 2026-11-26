@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#050912" />
+<title>圣诞之夜 · Christmas Night</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%84%3C/text%3E%3C/svg%3E" />
+<meta name="description" content="粒子圣诞树 · 照片挂饰 · 手势控制 · 三维雪景" />
+<link rel="stylesheet" href="./css/style.css" />
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three/build/three.module.min.js",
+    "three/addons/": "./vendor/three/addons/"
+  }
+}
+</script>
+</head>
+<body>
+
+<!-- ===== 3D 画布 ===== -->
+<canvas id="stage"></canvas>
+
+<!-- ===== 背景氛围层 ===== -->
+<div class="vignette" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+
+<!-- ===== 加载页 ===== -->
+<div id="loader" class="loader">
+  <div class="loader-inner">
+    <div class="loader-star" aria-hidden="true"></div>
+    <h1 class="loader-title">圣诞之夜</h1>
+    <p class="loader-sub">Christmas&nbsp;Night</p>
+    <div class="loader-bar"><i id="loader-bar-fill"></i></div>
+    <p class="loader-tip" id="loader-tip">正在点亮圣诞树…</p>
+  </div>
+</div>
+
+<!-- ===== 标题 ===== -->
+<header class="brand">
+  <div class="brand-orn" aria-hidden="true">✦</div>
+  <h1 class="brand-title">圣诞之夜</h1>
+  <p class="brand-sub">Merry Christmas &amp; A Gorgeous Starry Tree</p>
+</header>
+
+<!-- ===== 工具栏 ===== -->
+<nav class="dock" id="dock" aria-label="工具">
+  <button class="dock-btn" id="btn-music" data-on="true" title="背景音乐 (M)">
+    <span class="ico">♪</span><span class="lbl">音乐</span>
+  </button>
+  <button class="dock-btn" id="btn-next" title="切换歌曲 (N)">
+    <span class="ico">⏭</span><span class="lbl">切歌</span>
+  </button>
+  <button class="dock-btn" id="btn-snow" data-on="true" title="飘雪 (S)">
+    <span class="ico">❄</span><span class="lbl">飘雪</span>
+  </button>
+  <button class="dock-btn" id="btn-fireworks" data-on="true" title="烟花 (B)">
+    <span class="ico">✨</span><span class="lbl">烟花</span>
+  </button>
+  <button class="dock-btn" id="btn-gesture" data-on="false" title="手势控制 (G)">
+    <span class="ico">✋</span><span class="lbl">手势</span>
+  </button>
+  <button class="dock-btn" id="btn-wish" title="写下祝福 (W)">
+    <span class="ico">✎</span><span class="lbl">许愿</span>
+  </button>
+  <button class="dock-btn" id="btn-photos" title="上传照片 (P)">
+    <span class="ico">▣</span><span class="lbl">照片</span>
+  </button>
+  <button class="dock-btn" id="btn-shot" title="截图保存 (C)">
+    <span class="ico">◎</span><span class="lbl">截图</span>
+  </button>
+  <button class="dock-btn" id="btn-full" title="全屏 (F)">
+    <span class="ico">⛶</span><span class="lbl">全屏</span>
+  </button>
+</nav>
+
+<!-- ===== 探照灯 / 手势光标 ===== -->
+<div class="palm-cursor" id="palm-cursor" aria-hidden="true"><i></i></div>
+
+<!-- ===== 手势面板 ===== -->
+<aside class="panel" id="panel" aria-hidden="true">
+  <div class="panel-head">
+    <span>手势指南</span>
+    <button class="panel-close" id="panel-close" aria-label="关闭">×</button>
+  </div>
+  <ul class="gesture-list">
+    <li><b>张开手掌</b><span>移动光标</span></li>
+    <li><b>双手同时开合</b><span>拉开变大 / 合拢变小</span></li>
+    <li><b>拇指 + 食指 捏合</b><span>点击 / 关闭照片</span></li>
+    <li><b>三 指</b><span>显示 / 隐藏照片</span></li>
+    <li><b>握 拳</b><span>暂停 / 继续旋转</span></li>
+    <li><b>剪 刀 手</b><span>保存一张截图</span></li>
+  </ul>
+  <div class="panel-foot">
+    <div class="kv"><span>状态</span><b id="gesture-state">未启用</b></div>
+    <div class="kv"><span>音乐</span><b id="music-track">—</b></div>
+    <div class="kv"><span>帧率</span><b id="fps">—</b></div>
+  </div>
+</aside>
+
+<!-- ===== 提示气泡 ===== -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- ===== 照片灯箱 ===== -->
+<div class="lightbox" id="lightbox" aria-hidden="true">
+  <button class="lb-close" id="lb-close" aria-label="关闭">×</button>
+  <figure class="lb-figure">
+    <img id="lb-img" alt="" />
+    <figcaption id="lb-cap"></figcaption>
+  </figure>
+</div>
+
+<!-- ===== 许愿弹窗 ===== -->
+<div class="modal" id="wish-modal" aria-hidden="true">
+  <div class="modal-card">
+    <h2>写一句圣诞祝福</h2>
+    <p class="modal-hint">写下的话会变成一盏会发光的挂饰，绕着圣诞树缓缓升空。</p>
+    <input id="wish-input" maxlength="24" placeholder="愿你所念，皆成星河…" autocomplete="off" />
+    <div class="modal-actions">
+      <button class="btn ghost" id="wish-cancel">再想想</button>
+      <button class="btn gold" id="wish-ok">点亮它</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 操作提示 ===== -->
+<div class="hint" id="hint">拖动旋转 · 滚轮缩放 · 点击挂饰看照片</div>
+
+<!-- 隐藏的资源位 -->
+<input type="file" id="file-input" accept="image/*" multiple hidden />
+<video id="cam" playsinline muted hidden></video>
+
+<script type="module" src="./js/main.js"></script>
+</body>
+</html>

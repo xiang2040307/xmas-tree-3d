@@ -1,0 +1,20 @@
+# 个人音乐/照片（请放到本地运行目录，不会上传）
+music/*.mp3
+music/*.m4a
+music/*.aac
+music/*.wav
+music/*.ogg
+music/*.flac
+music/*.webm
+photos/*.jpg
+photos/*.jpeg
+photos/*.png
+photos/*.webp
+photos/*.gif
+photos/*.bmp
+photos/*.avif
+
+# 截图与临时文件
+shots/
+*.log
+prof_*/
